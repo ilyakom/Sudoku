@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Sudoku.Interactive.Annotations;
 
@@ -8,8 +7,6 @@ namespace Sudoku.Interactive
 	internal sealed class Model : INotifyPropertyChanged
 	{
 		private static Model _model;
-
-		internal readonly List<string> Labels;
 		internal SudokuBoard.Sudoku CurrentSudoku;
 
 		private Enums.SudokuDifficulty _currentDifficulty;
@@ -94,7 +91,6 @@ namespace Sudoku.Interactive
 		{
 			_isSolveAvailable = false;
 			_isGenerateAvailable = true;
-			Labels = new List<string>();
 			_currentDifficulty = Enums.SudokuDifficulty.Easy;
 		}
 

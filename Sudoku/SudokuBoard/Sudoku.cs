@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace Sudoku.SudokuBoard
 {
+	/// <summary>
+	/// Sudoku board
+	/// </summary>
 	public class Sudoku
 	{
 		private Dictionary<int, Cell> _matrix;
@@ -16,13 +19,16 @@ namespace Sudoku.SudokuBoard
 		public const int HardThreshold = 200_000;
 		public const int SamuraiThreshold = 625_000;
 
+		/// <summary>
+		/// Sudoku difficulty
+		/// </summary>
 		public Enums.SudokuDifficulty Difficulty
 		{
 			get
 			{
-				if (DifficultyPoints < 25000) return Enums.SudokuDifficulty.Easy;
-				if (DifficultyPoints < 200000) return Enums.SudokuDifficulty.Medium;
-				return DifficultyPoints < 625000 ? Enums.SudokuDifficulty.Hard : Enums.SudokuDifficulty.Samurai;
+				if (DifficultyPoints < MediumThreshold) return Enums.SudokuDifficulty.Easy;
+				if (DifficultyPoints < HardThreshold) return Enums.SudokuDifficulty.Medium;
+				return DifficultyPoints < SamuraiThreshold ? Enums.SudokuDifficulty.Hard : Enums.SudokuDifficulty.Samurai;
 			}
 		}
 
@@ -113,8 +119,8 @@ namespace Sudoku.SudokuBoard
 			var transposed = new Dictionary<int, Cell>();
 
 			for (var row = 0; row < BigSide; row++)
-			for (var column = 0; column < BigSide; column++)
-				transposed.Add(row * BigSide + column, new Cell(row, column, this[column, row]));
+				for (var column = 0; column < BigSide; column++)
+					transposed.Add(row * BigSide + column, new Cell(row, column, this[column, row]));
 
 			_matrix = transposed;
 		}

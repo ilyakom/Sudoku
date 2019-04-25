@@ -2,6 +2,9 @@
 
 namespace Sudoku.SudokuBoard
 {
+	/// <summary>
+	/// Cell on Sudoku board
+	/// </summary>
 	internal class Cell
 	{
 		private int _row;
@@ -15,6 +18,9 @@ namespace Sudoku.SudokuBoard
 			_value = value;
 		}
 
+		/// <summary>
+		/// Row number
+		/// </summary>
 		public int Row
 		{
 			get => _row;
@@ -27,6 +33,9 @@ namespace Sudoku.SudokuBoard
 			}
 		}
 
+		/// <summary>
+		/// Column Number
+		/// </summary>
 		public int Column
 		{
 			get => _column;
@@ -39,6 +48,9 @@ namespace Sudoku.SudokuBoard
 			}
 		}
 
+		/// <summary>
+		/// Value in cell
+		/// </summary>
 		public int Value
 		{
 			get => _value;

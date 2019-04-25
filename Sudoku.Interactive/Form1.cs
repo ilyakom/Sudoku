@@ -28,27 +28,53 @@ namespace Sudoku.Interactive
 			target.DataBindings.Add(bind);
 		}
 
+		/// <summary>
+		/// Update values on board
+		/// </summary>
 		private void UpdateLabelsUi()
 		{
-			for (var i = 0; i < SudokuBoard.Sudoku.BigSide * SudokuBoard.Sudoku.BigSide; i++)
-			{
-				SudokuGrid.Controls[SudokuBoard.Sudoku.BigSide * SudokuBoard.Sudoku.BigSide - 1 - i].Text = _model.Labels[i];
-			}
-		}
-
-		private void UpdateList()
-		{
-			_model.Labels.Clear();
+			const int lastElementIdx = SudokuBoard.Sudoku.BigSide * SudokuBoard.Sudoku.BigSide - 1;
 
 			for (var i = 0; i < SudokuBoard.Sudoku.BigSide; i++)
 			{
 				for (var j = 0; j < SudokuBoard.Sudoku.BigSide; j++)
 				{
-					_model.Labels.Add(_model.CurrentSudoku[i, j] > 0 && _model.CurrentSudoku[i, j] < 10 ? _model.CurrentSudoku[i, j].ToString() : "");
+					var current = i * SudokuBoard.Sudoku.BigSide + j;
+
+					if (_model.CurrentSudoku[i, j] > 0)
+					{
+						SudokuGrid.Controls[lastElementIdx - current].Text = _model.CurrentSudoku[i, j].ToString();
+						SudokuGrid.Controls[lastElementIdx - current].Enabled = false;
+					}
+					else
+					{
+						SudokuGrid.Controls[lastElementIdx - current].Text = "";
+						SudokuGrid.Controls[lastElementIdx - current].Enabled = true;
+					}
 				}
 			}
 		}
 
+		/// <summary>
+		/// Update sudoku in model after click
+		/// </summary>
+		private void UpdateModel()
+		{
+			const int lastElementIdx = SudokuBoard.Sudoku.BigSide * SudokuBoard.Sudoku.BigSide - 1;
+
+			for (var i = 0; i < SudokuBoard.Sudoku.BigSide; i++)
+			{
+				for (var j = 0; j < SudokuBoard.Sudoku.BigSide; j++)
+				{
+					var currentIdx = i * SudokuBoard.Sudoku.BigSide + j;
+					var currentValue = SudokuGrid.Controls[lastElementIdx - currentIdx].Text == ""
+						? 0
+						: int.Parse(SudokuGrid.Controls[lastElementIdx - currentIdx].Text);
+
+					_model.CurrentSudoku[i, j] = currentValue;
+				}
+			}
+		}
 
 		private async void GenerateButton_Click(object sender, EventArgs e)
 		{
@@ -57,8 +83,6 @@ namespace Sudoku.Interactive
 			await Task.Run(() =>
 			{
 				_model.CurrentSudoku = SudokuGenerator.Generate(_model.SudokuDifficulty, _model.SudokuSymmetry, _model.DifficultyPoints);
-
-				UpdateList();
 			});
 
 			UpdateLabelsUi();
@@ -68,16 +92,22 @@ namespace Sudoku.Interactive
 
 		private async void SolveButton_Click(object sender, EventArgs e)
 		{
-			await Task.Run(() =>
+			var solvedSudoku = await Task.Run(() =>
 			{
 				var solver = new SimpleSolver();
-
-				_model.CurrentSudoku = solver.SolveSudoku(_model.CurrentSudoku);
-
-				UpdateList();
+				return solver.SolveSudoku(_model.CurrentSudoku);
 			});
 
-			UpdateLabelsUi();
+
+			if (solvedSudoku == null)
+			{
+				MessageBox.Show(@"This Sudoku does not have any solution");
+			}
+			else
+			{
+				_model.CurrentSudoku = solvedSudoku;
+				UpdateLabelsUi();
+			}
 		}
 
 		private void Difficulty_SelectedIndexChanged(object sender, EventArgs e)
@@ -104,10 +134,20 @@ namespace Sudoku.Interactive
 		{
 			_model.CurrentSudoku = await SudokuReader.ReadFromFileAsync(LoadSudokuFromFile.FileName);
 
-			UpdateList();
 			UpdateLabelsUi();
 
 			_model.IsSolveAvailable = true;
+		}
+
+		private void Cell_MouseClick(object sender, MouseEventArgs e)
+		{
+			if(_model.CurrentSudoku == null) return;
+
+			var curValue = ((Label)sender).Text == "" ? 0 : int.Parse(((Label)sender).Text);
+
+			((Label)sender).Text = curValue >= 9 ? "" : (curValue + 1).ToString();
+
+			UpdateModel();
 		}
 	}
 }
