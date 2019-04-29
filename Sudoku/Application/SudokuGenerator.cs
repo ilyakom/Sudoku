@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Sudoku.Solvers;
-using Sudoku.SudokuBoard;
+using Sudoku.Domain;
 
-namespace Sudoku.Sources
+namespace Sudoku.Application
 {
 	public static class SudokuGenerator
 	{
@@ -19,14 +18,14 @@ namespace Sudoku.Sources
 		/// <param name="symmetry"></param>
 		/// <param name="customDifficultyPoints"> Difficulty Points in case of Difficulty = Custom </param>
 		/// <returns><see cref="Sudoku"/></returns>
-		public static SudokuBoard.Sudoku Generate(Enums.SudokuDifficulty difficulty,
+		public static Domain.Sudoku Generate(Enums.SudokuDifficulty difficulty,
 			Enums.SymmetryType symmetry = Enums.SymmetryType.None, int customDifficultyPoints = 0)
 		{
 			var notCheckedPairs = new List<Tuple<int, int>>();
 
-			for (var i = 0; i < SudokuBoard.Sudoku.BigSide; i++)
+			for (var i = 0; i < Domain.Sudoku.BigSide; i++)
 			{
-				for (var j = 0; j < SudokuBoard.Sudoku.BigSide; j++) 
+				for (var j = 0; j < Domain.Sudoku.BigSide; j++) 
 				{
 					notCheckedPairs.Add(Tuple.Create(i,j));
 				}
@@ -36,16 +35,16 @@ namespace Sudoku.Sources
 			switch (difficulty)
 			{
 				case Enums.SudokuDifficulty.Easy:
-					difficultyPoints = SudokuBoard.Sudoku.EasyThreshold;
+					difficultyPoints = Domain.Sudoku.EasyThreshold;
 					break;
 				case Enums.SudokuDifficulty.Medium:
-					difficultyPoints = SudokuBoard.Sudoku.MediumThreshold;
+					difficultyPoints = Domain.Sudoku.MediumThreshold;
 					break;
 				case Enums.SudokuDifficulty.Hard:
-					difficultyPoints = SudokuBoard.Sudoku.HardThreshold;
+					difficultyPoints = Domain.Sudoku.HardThreshold;
 					break;
 				case Enums.SudokuDifficulty.Samurai:
-					difficultyPoints = SudokuBoard.Sudoku.SamuraiThreshold;
+					difficultyPoints = Domain.Sudoku.SamuraiThreshold;
 					break;
 				case Enums.SudokuDifficulty.Custom:
 					difficultyPoints = customDifficultyPoints;
@@ -61,7 +60,7 @@ namespace Sudoku.Sources
 			return sudoku;
 		}
 
-		private static bool GenerateFromFull(SudokuBoard.Sudoku sudoku, IEnumerable<Tuple<int, int>> notCheckedPositionsFromPrev,
+		private static bool GenerateFromFull(Domain.Sudoku sudoku, IEnumerable<Tuple<int, int>> notCheckedPositionsFromPrev,
 			int difficultyPoints, Enums.SymmetryType symmetry)
 		{
 			var notCheckedPositions = new List<Tuple<int, int>>(notCheckedPositionsFromPrev);
@@ -98,7 +97,7 @@ namespace Sudoku.Sources
 			return false;
 		}
 
-		private static List<Cell> RemoveNext(SudokuBoard.Sudoku sudoku, IList<Tuple<int, int>> notCheckedPositions, Enums.SymmetryType symmetry)
+		private static List<Cell> RemoveNext(Domain.Sudoku sudoku, IList<Tuple<int, int>> notCheckedPositions, Enums.SymmetryType symmetry)
 		{
 			var randomPosition = Random.Next(0, notCheckedPositions.Count - 1);
 
@@ -117,7 +116,7 @@ namespace Sudoku.Sources
 			{
 				if (row == 4) return removedValues;
 
-				var symmetricRow = SudokuBoard.Sudoku.BigSide - 1 - row;
+				var symmetricRow = Domain.Sudoku.BigSide - 1 - row;
 				removedValues.Add(new Cell(symmetricRow, column , sudoku[symmetricRow, column]));
 				notCheckedPositions.Remove(Tuple.Create(symmetricRow, column));
 
@@ -127,7 +126,7 @@ namespace Sudoku.Sources
 			{
 				if (column == 4) return removedValues;
 
-				var symmetricColumn = SudokuBoard.Sudoku.BigSide - 1 - column;
+				var symmetricColumn = Domain.Sudoku.BigSide - 1 - column;
 				removedValues.Add(new Cell(row, symmetricColumn, sudoku[row, symmetricColumn]));
 				notCheckedPositions.Remove(Tuple.Create(row, symmetricColumn));
 
@@ -137,7 +136,7 @@ namespace Sudoku.Sources
 			return removedValues;
 		}
 
-		private static void RecoverCells(SudokuBoard.Sudoku sudoku, IList<Cell> cellsToRecover)
+		private static void RecoverCells(Domain.Sudoku sudoku, IList<Cell> cellsToRecover)
 		{
 			foreach (var cell in cellsToRecover)
 			{
@@ -147,20 +146,20 @@ namespace Sudoku.Sources
 			cellsToRecover.Clear();
 		}
 
-		internal static SudokuBoard.Sudoku GenerateFull()
+		internal static Domain.Sudoku GenerateFull()
 		{
-			var sudoku = new SudokuBoard.Sudoku();
+			var sudoku = new Domain.Sudoku();
 
-			for(var i = 0; i < SudokuBoard.Sudoku.BigSide; i++)
-				for (var j = 0; j < SudokuBoard.Sudoku.BigSide; j++)
+			for(var i = 0; i < Domain.Sudoku.BigSide; i++)
+				for (var j = 0; j < Domain.Sudoku.BigSide; j++)
 				{
-					sudoku[i, j] = (i * SudokuBoard.Sudoku.SmallSide + i / SudokuBoard.Sudoku.SmallSide + j) % SudokuBoard.Sudoku.BigSide + 1;
+					sudoku[i, j] = (i * Domain.Sudoku.SmallSide + i / Domain.Sudoku.SmallSide + j) % Domain.Sudoku.BigSide + 1;
 				}
 
 			return sudoku;
 		}
 
-		internal static void RunShuffle(SudokuBoard.Sudoku sudoku, int shufflesCount)
+		internal static void RunShuffle(Domain.Sudoku sudoku, int shufflesCount)
 		{
 			for (var i = 0; i < shufflesCount; i++)
 			{

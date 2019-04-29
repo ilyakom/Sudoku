@@ -7,7 +7,7 @@ namespace Sudoku.Interactive
 	internal sealed class Model : INotifyPropertyChanged
 	{
 		private static Model _model;
-		internal SudokuBoard.Sudoku CurrentSudoku;
+		internal Domain.Sudoku CurrentSudoku;
 
 		private Enums.SudokuDifficulty _currentDifficulty;
 		private Enums.SymmetryType _currentSymmetry;
@@ -35,16 +35,16 @@ namespace Sudoku.Interactive
 				switch (value)
 				{
 					case Enums.SudokuDifficulty.Easy:
-						DifficultyPoints = SudokuBoard.Sudoku.EasyThreshold;
+						DifficultyPoints = Domain.Sudoku.EasyThreshold;
 						break;
 					case Enums.SudokuDifficulty.Medium:
-						DifficultyPoints = SudokuBoard.Sudoku.MediumThreshold;
+						DifficultyPoints = Domain.Sudoku.MediumThreshold;
 						break;
 					case Enums.SudokuDifficulty.Hard:
-						DifficultyPoints = SudokuBoard.Sudoku.HardThreshold;
+						DifficultyPoints = Domain.Sudoku.HardThreshold;
 						break;
 					case Enums.SudokuDifficulty.Samurai:
-						DifficultyPoints = SudokuBoard.Sudoku.SamuraiThreshold;
+						DifficultyPoints = Domain.Sudoku.SamuraiThreshold;
 						break;
 				}
 
@@ -59,8 +59,8 @@ namespace Sudoku.Interactive
 			{
 				_currentDifficultyPoints = value;
 
-				if (value != SudokuBoard.Sudoku.EasyThreshold && value != SudokuBoard.Sudoku.MediumThreshold && value != SudokuBoard.Sudoku.HardThreshold &&
-				    value != SudokuBoard.Sudoku.SamuraiThreshold)
+				if (value != Domain.Sudoku.EasyThreshold && value != Domain.Sudoku.MediumThreshold && value != Domain.Sudoku.HardThreshold &&
+				    value != Domain.Sudoku.SamuraiThreshold)
 					SudokuDifficulty = Enums.SudokuDifficulty.Custom;
 
 				OnPropertyChanged(nameof(DifficultyPoints));

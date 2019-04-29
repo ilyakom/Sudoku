@@ -2,8 +2,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Sudoku.Solvers;
-using Sudoku.Sources;
+using Sudoku.Adapter;
+using Sudoku.Application;
 
 namespace Sudoku.Test
 {
@@ -21,7 +21,7 @@ namespace Sudoku.Test
 		{
 			var absPath = Path.Combine(TestContext.CurrentContext.TestDirectory, path);
 
-			var sudoku = await SudokuReader.ReadFromFileAsync(absPath);
+			var sudoku = await SudokuAdapter.ReadFromFileAsync(absPath);
 			var solver = new SimpleSolver();
 
 			var actualSolutionsCount = solver.CountSolutions(sudoku);
@@ -36,7 +36,7 @@ namespace Sudoku.Test
 		{
 			var absPath = Path.Combine(TestContext.CurrentContext.TestDirectory, path);
 
-			var sudoku = await SudokuReader.ReadFromFileAsync(absPath);
+			var sudoku = await SudokuAdapter.ReadFromFileAsync(absPath);
 			var solver = new SimpleSolver();
 
 			var solutions = solver.GetTopNSolutions(sudoku, solutionsLimit, type);

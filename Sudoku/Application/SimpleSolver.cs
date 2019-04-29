@@ -2,17 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Sudoku.Solvers
+namespace Sudoku.Application
 {
 	public class SimpleSolver
 	{
-		private readonly List<SudokuBoard.Sudoku> _solutions;
+		private readonly List<Domain.Sudoku> _solutions;
 		private int _currentIterationsCount;
 
 
 		public SimpleSolver()
 		{
-			_solutions = new List<SudokuBoard.Sudoku>();
+			_solutions = new List<Domain.Sudoku>();
 		}
 		
 		/// <summary>
@@ -20,7 +20,7 @@ namespace Sudoku.Solvers
 		/// </summary>
 		/// <param name="sudoku"></param>
 		/// <returns></returns>
-		public int CountSolutions(SudokuBoard.Sudoku sudoku)
+		public int CountSolutions(Domain.Sudoku sudoku)
 		{
 			if (sudoku == null) throw new ArgumentNullException(nameof(sudoku));
 
@@ -33,7 +33,7 @@ namespace Sudoku.Solvers
 		/// </summary>
 		/// <param name="sudoku"></param>
 		/// <returns></returns>
-		public SudokuBoard.Sudoku SolveSudoku(SudokuBoard.Sudoku sudoku)
+		public Domain.Sudoku SolveSudoku(Domain.Sudoku sudoku)
 		{
 			if (sudoku == null) throw new ArgumentNullException(nameof(sudoku));
 
@@ -49,7 +49,7 @@ namespace Sudoku.Solvers
 		/// <param name="count"> Number of solutions to return </param>
 		/// <param name="topType"> Sort order </param>
 		/// <returns></returns>
-		public List<SudokuBoard.Sudoku> GetTopNSolutions(SudokuBoard.Sudoku sudoku, int count, Enums.TopType topType)
+		public List<Domain.Sudoku> GetTopNSolutions(Domain.Sudoku sudoku, int count, Enums.TopType topType)
 		{
 			if (sudoku == null) throw  new ArgumentNullException(nameof(sudoku));
 			if (count < 0) throw new Exception("Number of solutions can not be negative value");
@@ -61,7 +61,7 @@ namespace Sudoku.Solvers
 				: _solutions.ToList();
 		}
 
-		private void ClearAndSolve(SudokuBoard.Sudoku sudoku, int currentIndex, Enums.TopType type, int count)
+		private void ClearAndSolve(Domain.Sudoku sudoku, int currentIndex, Enums.TopType type, int count)
 		{
 			_currentIterationsCount = 0;
 			_solutions.Clear();
@@ -69,11 +69,11 @@ namespace Sudoku.Solvers
 			SolveBruteForce(sudoku, currentIndex, type, count);
 		}
 
-		private bool SolveBruteForce(SudokuBoard.Sudoku sudoku, int currentIndex, Enums.TopType type, int count)
+		private bool SolveBruteForce(Domain.Sudoku sudoku, int currentIndex, Enums.TopType type, int count)
 		{
 			while (true)
 			{
-				if (currentIndex == SudokuBoard.Sudoku.BigSide * SudokuBoard.Sudoku.BigSide)
+				if (currentIndex == Domain.Sudoku.BigSide * Domain.Sudoku.BigSide)
 				{
 					var solutionBoard = sudoku.Copy();
 					solutionBoard.DifficultyPoints = _currentIterationsCount;
@@ -82,8 +82,8 @@ namespace Sudoku.Solvers
 				}
 				else
 				{
-					var row = currentIndex / SudokuBoard.Sudoku.BigSide;
-					var column = currentIndex % SudokuBoard.Sudoku.BigSide;
+					var row = currentIndex / Domain.Sudoku.BigSide;
+					var column = currentIndex % Domain.Sudoku.BigSide;
 
 					if (sudoku[row, column] != 0)
 					{
@@ -91,10 +91,10 @@ namespace Sudoku.Solvers
 						continue;
 					}
 
-					for (var i = 1; i <= SudokuBoard.Sudoku.BigSide; i++)
+					for (var i = 1; i <= Domain.Sudoku.BigSide; i++)
 					{
 						_currentIterationsCount++;
-						if (!ConsistentIfPut(sudoku, row, column, i)) continue;
+						if (!Validations.ConsistentIfPut(sudoku, row, column, i)) continue;
 
 						sudoku[row, column] = i;
 						if (SolveBruteForce(sudoku, currentIndex + 1, type, count) &&
@@ -106,27 +106,6 @@ namespace Sudoku.Solvers
 
 				return false;
 			}
-		}
-
-		private static bool ConsistentIfPut(SudokuBoard.Sudoku board, int row, int column, int value)
-		{
-			for (var i = 0; i < SudokuBoard.Sudoku.BigSide; i++)
-			{
-				if (board[row, i] == value) return false;
-				if (board[i, column] == value) return false;
-			}
-
-			var rowStart = row - row % SudokuBoard.Sudoku.SmallSide;
-			var columnStart = column - column % SudokuBoard.Sudoku.SmallSide;
-
-			for (var m = 0; m < SudokuBoard.Sudoku.SmallSide; m++)
-			{
-				for (var k = 0; k < SudokuBoard.Sudoku.SmallSide; k++)
-				{
-					if (board[rowStart + k, columnStart + m] == value) return false;
-				}
-			}
-			return true;
 		}
 	}
 }

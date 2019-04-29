@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Sudoku.SudokuBoard
+namespace Sudoku.Domain
 {
 	/// <summary>
 	/// Sudoku board

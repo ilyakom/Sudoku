@@ -5,7 +5,7 @@ using ContentAlignment = System.Drawing.ContentAlignment;
 
 namespace Sudoku.Interactive
 {
-	partial class Form1
+	partial class MainForm
 	{
 		/// <summary>
 		/// Required designer variable.
@@ -134,7 +134,7 @@ namespace Sudoku.Interactive
 			// 
 			// SudokuGrid
 			// 
-			this.SudokuGrid.BackColor = System.Drawing.SystemColors.ActiveBorder;
+			this.SudokuGrid.BackColor = System.Drawing.Color.Transparent;
 			this.SudokuGrid.CellBorderStyle = System.Windows.Forms.TableLayoutPanelCellBorderStyle.Single;
 			this.SudokuGrid.ColumnCount = 9;
 			this.SudokuGrid.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 11.11112F));
@@ -227,6 +227,7 @@ namespace Sudoku.Interactive
 			this.SudokuGrid.Controls.Add(this.label3, 2, 0);
 			this.SudokuGrid.Controls.Add(this.label2, 1, 0);
 			this.SudokuGrid.Controls.Add(this.label1, 0, 0);
+			this.SudokuGrid.ForeColor = System.Drawing.Color.Maroon;
 			this.SudokuGrid.GrowStyle = System.Windows.Forms.TableLayoutPanelGrowStyle.FixedSize;
 			this.SudokuGrid.Location = new System.Drawing.Point(12, 12);
 			this.SudokuGrid.Name = "SudokuGrid";
@@ -1331,6 +1332,7 @@ namespace Sudoku.Interactive
 			this.label9.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
 			this.label9.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.label9.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.label9.ForeColor = System.Drawing.Color.Maroon;
 			this.label9.Location = new System.Drawing.Point(600, 1);
 			this.label9.Margin = new System.Windows.Forms.Padding(0);
 			this.label9.Name = "label9";
@@ -1575,7 +1577,7 @@ namespace Sudoku.Interactive
 			this.LoadFromFileButton.UseVisualStyleBackColor = true;
 			this.LoadFromFileButton.Click += new System.EventHandler(this.LoadFromFileButton_Click);
 			// 
-			// Form1
+			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -1586,8 +1588,10 @@ namespace Sudoku.Interactive
 			this.Controls.Add(this.SolveButton);
 			this.Controls.Add(this.GenerateButton);
 			this.Controls.Add(this.SudokuGrid);
-			this.Name = "Form1";
-			this.Text = "Form1";
+			this.Name = "MainForm";
+			this.Text = "Sudoku";
+			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+			this.Load += new System.EventHandler(this.MainForm_Load);
 			this.SudokuGrid.ResumeLayout(false);
 			this.SudokuGrid.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this.DifficultyTrackBar)).EndInit();

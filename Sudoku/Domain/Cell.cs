@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Sudoku.SudokuBoard
+namespace Sudoku.Domain
 {
 	/// <summary>
 	/// Cell on Sudoku board

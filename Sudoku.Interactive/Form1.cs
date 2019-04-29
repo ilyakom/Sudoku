@@ -1,16 +1,17 @@
 ﻿using System;
+using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Sudoku.Solvers;
-using Sudoku.Sources;
+using Sudoku.Adapter;
+using Sudoku.Application;
 
 namespace Sudoku.Interactive
 {
-	public partial class Form1 : Form
+	public partial class MainForm : Form
 	{
 		private readonly Model _model = Model.GetInstance();
 
-		public Form1()
+		public MainForm()
 		{
 			InitializeComponent();
 			
@@ -33,45 +34,24 @@ namespace Sudoku.Interactive
 		/// </summary>
 		private void UpdateLabelsUi()
 		{
-			const int lastElementIdx = SudokuBoard.Sudoku.BigSide * SudokuBoard.Sudoku.BigSide - 1;
+			const int lastElementIdx = Domain.Sudoku.BigSide * Domain.Sudoku.BigSide - 1;
 
-			for (var i = 0; i < SudokuBoard.Sudoku.BigSide; i++)
+			for (var i = 0; i < Domain.Sudoku.BigSide; i++)
 			{
-				for (var j = 0; j < SudokuBoard.Sudoku.BigSide; j++)
+				for (var j = 0; j < Domain.Sudoku.BigSide; j++)
 				{
-					var current = i * SudokuBoard.Sudoku.BigSide + j;
+					var current = i * Domain.Sudoku.BigSide + j;
 
 					if (_model.CurrentSudoku[i, j] > 0)
 					{
 						SudokuGrid.Controls[lastElementIdx - current].Text = _model.CurrentSudoku[i, j].ToString();
-						SudokuGrid.Controls[lastElementIdx - current].Enabled = false;
+						SudokuGrid.Controls[lastElementIdx - current].ForeColor = Color.Black;
 					}
 					else
 					{
 						SudokuGrid.Controls[lastElementIdx - current].Text = "";
-						SudokuGrid.Controls[lastElementIdx - current].Enabled = true;
+						SudokuGrid.Controls[lastElementIdx - current].ForeColor = Color.Maroon;
 					}
-				}
-			}
-		}
-
-		/// <summary>
-		/// Update sudoku in model after click
-		/// </summary>
-		private void UpdateModel()
-		{
-			const int lastElementIdx = SudokuBoard.Sudoku.BigSide * SudokuBoard.Sudoku.BigSide - 1;
-
-			for (var i = 0; i < SudokuBoard.Sudoku.BigSide; i++)
-			{
-				for (var j = 0; j < SudokuBoard.Sudoku.BigSide; j++)
-				{
-					var currentIdx = i * SudokuBoard.Sudoku.BigSide + j;
-					var currentValue = SudokuGrid.Controls[lastElementIdx - currentIdx].Text == ""
-						? 0
-						: int.Parse(SudokuGrid.Controls[lastElementIdx - currentIdx].Text);
-
-					_model.CurrentSudoku[i, j] = currentValue;
 				}
 			}
 		}
@@ -132,22 +112,60 @@ namespace Sudoku.Interactive
 
 		private async void LoadSudokuFromFile_FileOk(object sender, System.ComponentModel.CancelEventArgs e)
 		{
-			_model.CurrentSudoku = await SudokuReader.ReadFromFileAsync(LoadSudokuFromFile.FileName);
+			_model.CurrentSudoku = await SudokuAdapter.ReadFromFileAsync(LoadSudokuFromFile.FileName);
 
 			UpdateLabelsUi();
 
 			_model.IsSolveAvailable = true;
 		}
 
-		private void Cell_MouseClick(object sender, MouseEventArgs e)
+		private async void Cell_MouseClick(object sender, MouseEventArgs e)
 		{
-			if(_model.CurrentSudoku == null) return;
+			if (_model.CurrentSudoku == null) return;
+
+			var row = SudokuGrid.GetRow((Label)sender);
+			var column = SudokuGrid.GetColumn((Label)sender);
 
 			var curValue = ((Label)sender).Text == "" ? 0 : int.Parse(((Label)sender).Text);
+			var initialValue = curValue;
 
-			((Label)sender).Text = curValue >= 9 ? "" : (curValue + 1).ToString();
+			for (var i = 0; i < Domain.Sudoku.BigSide; i++)
+			{
+				_model.CurrentSudoku[row, column] = curValue >= 9 ? 0 : curValue + 1;
 
-			UpdateModel();
+				if ( await Task.Run(() => Validations.ValidateSudoku(_model.CurrentSudoku)))
+				{
+					((Label) sender).Text = _model.CurrentSudoku[row, column] == 0 ? "" : _model.CurrentSudoku[row, column].ToString();
+					return;
+				}
+				
+				curValue = curValue >= 9 ? 0 : curValue + 1;
+			}
+
+			_model.CurrentSudoku[row, column] = initialValue;
+		}
+
+		private async void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+		{
+			await SudokuAdapter.SaveSudoku(_model.CurrentSudoku);
+		}
+
+		private async void MainForm_Load(object sender, EventArgs e)
+		{
+			try
+			{
+				_model.CurrentSudoku = await SudokuAdapter.LoadSavedSudoku();
+
+				if (_model.CurrentSudoku != null)
+				{
+					UpdateLabelsUi();
+					_model.IsSolveAvailable = true;
+				}
+			}
+			catch (Exception exception)
+			{
+				MessageBox.Show($@"Unable to load saved Sudoku! {Environment.NewLine} {exception}");
+			}
 		}
 	}
 }
