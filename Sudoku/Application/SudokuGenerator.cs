@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Sudoku.Domain;
 
 namespace Sudoku.Application
 {
+	/// <summary>
+	/// Sudoku generator
+	/// </summary>
 	public static class SudokuGenerator
 	{
 		private static readonly Random Random = new Random(Guid.NewGuid().GetHashCode());
@@ -14,13 +18,11 @@ namespace Sudoku.Application
 		/// <summary>
 		/// Generates new Sudoku with given <see cref="Enums"/> Difficulty or Difficulty Points if Difficulty is Custom
 		/// </summary>
-		/// <param name="difficulty"> Difficulty Enum </param>
-		/// <param name="symmetry"></param>
-		/// <param name="customDifficultyPoints"> Difficulty Points in case of Difficulty = Custom </param>
 		/// <returns><see cref="Sudoku"/></returns>
-		public static Domain.Sudoku Generate(Enums.SudokuDifficulty difficulty,
-			Enums.SymmetryType symmetry = Enums.SymmetryType.None, int customDifficultyPoints = 0)
+		public static Domain.Sudoku Generate(GenerationSettings settings, CancellationToken token)
 		{
+			if (settings == null) throw new ArgumentNullException(nameof(settings));
+
 			var notCheckedPairs = new List<Tuple<int, int>>();
 
 			for (var i = 0; i < Domain.Sudoku.BigSide; i++)
@@ -32,7 +34,7 @@ namespace Sudoku.Application
 			}
 
 			int difficultyPoints;
-			switch (difficulty)
+			switch (settings.Difficulty)
 			{
 				case Enums.SudokuDifficulty.Easy:
 					difficultyPoints = Domain.Sudoku.EasyThreshold;
@@ -47,28 +49,40 @@ namespace Sudoku.Application
 					difficultyPoints = Domain.Sudoku.SamuraiThreshold;
 					break;
 				case Enums.SudokuDifficulty.Custom:
-					difficultyPoints = customDifficultyPoints;
+					difficultyPoints = settings.DifficultyPoints;
 					break;
 				default:
-					throw new ArgumentOutOfRangeException(nameof(difficulty), difficulty, null);
+					throw new ArgumentOutOfRangeException(nameof(settings.Difficulty), settings.Difficulty, null);
 			}
 
+			token.ThrowIfCancellationRequested();
+
 			var sudoku = GenerateFull();
-			RunShuffle(sudoku, ShufflesCount);
-			GenerateFromFull(sudoku, notCheckedPairs, difficultyPoints, symmetry);
+
+			RunShuffle(sudoku, ShufflesCount, token);
+			GenerateFromFull(sudoku, notCheckedPairs, difficultyPoints, settings.Symmetry, token);
 
 			return sudoku;
 		}
 
+		/// <summary>
+		/// Generate sudoku to fill from full-filled sudoku
+		/// </summary>
+		/// <param name="sudoku"></param>
+		/// <param name="notCheckedPositionsFromPrev"></param>
+		/// <param name="difficultyPoints"></param>
+		/// <param name="symmetry"></param>
+		/// <param name="token">Cancellation token</param>
+		/// <returns></returns>
 		private static bool GenerateFromFull(Domain.Sudoku sudoku, IEnumerable<Tuple<int, int>> notCheckedPositionsFromPrev,
-			int difficultyPoints, Enums.SymmetryType symmetry)
+			int difficultyPoints, Enums.SymmetryType symmetry, CancellationToken token)
 		{
 			var notCheckedPositions = new List<Tuple<int, int>>(notCheckedPositionsFromPrev);
 			while (notCheckedPositions.Count > 0)
 			{
+				token.ThrowIfCancellationRequested();
 
 				var removedCells = RemoveNext(sudoku, notCheckedPositions, symmetry);
-
 
 				var solutions = Solver.GetTopNSolutions(sudoku, 2, Enums.TopType.Any);
 
@@ -84,14 +98,12 @@ namespace Sudoku.Application
 					return false;
 				}
 
-				if(GenerateFromFull(sudoku, notCheckedPositions, difficultyPoints, symmetry))
+				if(GenerateFromFull(sudoku, notCheckedPositions, difficultyPoints, symmetry, token))
 				{
 					return true;
 				}
-				else
-				{
-					RecoverCells(sudoku, removedCells);
-				}
+
+				RecoverCells(sudoku, removedCells);
 			}
 
 			return false;
@@ -159,10 +171,12 @@ namespace Sudoku.Application
 			return sudoku;
 		}
 
-		internal static void RunShuffle(Domain.Sudoku sudoku, int shufflesCount)
+		internal static void RunShuffle(Domain.Sudoku sudoku, int shufflesCount, CancellationToken token)
 		{
 			for (var i = 0; i < shufflesCount; i++)
 			{
+				token.ThrowIfCancellationRequested();
+
 				var firstParam = Random.Next(0, 2);
 				var secondParam = Random.Next(0, 2);
 				var thirdParam = Random.Next(0, 2);

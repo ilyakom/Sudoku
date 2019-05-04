@@ -47,6 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Application\GenerationSettings.cs" />
     <Compile Include="Application\Validations.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="Application\SudokuGenerator.cs" />

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using NUnit.Framework;
-using Sudoku.Adapter;
 using Sudoku.Application;
 
 namespace Sudoku.Test
@@ -25,10 +25,15 @@ namespace Sudoku.Test
 			sudoku.SwapBigRows(0, 2);
 			Assert.AreEqual(true, CheckSudoku(sudoku));
 
-			SudokuGenerator.RunShuffle(sudoku, 10);
+			SudokuGenerator.RunShuffle(sudoku, 10, CancellationToken.None);
 			Assert.AreEqual(true, CheckSudoku(sudoku));
 
-			sudoku = SudokuGenerator.Generate(Enums.SudokuDifficulty.Medium);
+			var settings = new GenerationSettings
+			{
+				Difficulty = Enums.SudokuDifficulty.Medium
+			};
+
+			sudoku = SudokuGenerator.Generate(settings, CancellationToken.None);
 			Assert.GreaterOrEqual(sudoku.DifficultyPoints, Domain.Sudoku.MediumThreshold);
 
 		}

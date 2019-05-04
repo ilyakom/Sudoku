@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Sudoku.Adapter
@@ -51,29 +50,26 @@ namespace Sudoku.Adapter
 			return sudoku;
 		}
 
-		public static async Task SaveSudoku(Domain.Sudoku sudoku)
+		/// <summary>
+		/// Save sudoku to local file named <see cref="LocalFile"/>
+		/// </summary>
+		/// <param name="sudoku"><see cref="Domain.Sudoku"/>></param>
+		/// <returns></returns>
+		public static async Task SaveSudokuAsync(Domain.Sudoku sudoku)
 		{
 			if(sudoku == null) throw new NullReferenceException(nameof(sudoku));
 
 			using (var fileStream = new FileStream(LocalFile, FileMode.Create))
 			using (var stream = new StreamWriter(fileStream))
 			{
-				for (var i = 0; i < Domain.Sudoku.BigSide; i++)
-				{
-					var row = new StringBuilder();
-
-					for (var j = 0; j < Domain.Sudoku.BigSide; j++)
-					{
-						row.Append(sudoku[i, j]);
-					}
-
-					row.Append(Environment.NewLine);
-
-					await stream.WriteAsync(row.ToString());
-				}
+				await stream.WriteAsync(sudoku.ToString());
 			}
 		}
 
+		/// <summary>
+		/// Load previously saved sudoku from file <see cref="LocalFile"/>
+		/// </summary>
+		/// <returns></returns>
 		public static async Task<Domain.Sudoku> LoadSavedSudoku()
 		{
 			return await ReadFromFileAsync(LocalFile);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Sudoku.Adapter;
@@ -23,10 +24,27 @@ namespace Sudoku.Interactive
 			AddBinding("SudokuSymmetry", "Text", SymmetryComboBox);
 		}
 
+		/// <summary>
+		/// Add binding
+		/// </summary>
+		/// <param name="modelField">field name in Model</param>
+		/// <param name="property">Control property name</param>
+		/// <param name="target">Control</param>
 		private void AddBinding(string modelField, string property, IBindableComponent target)
 		{
 			var bind = new Binding(property, _model, modelField);
 			target.DataBindings.Add(bind);
+		}
+
+		/// <summary>
+		/// Ask user if he\she want to cancel generation process 
+		/// </summary>
+		/// <returns></returns>
+		private static bool AskToWait()
+		{
+			var act = MessageBox.Show(@"Generation takes too long. Wait anyway?", @"Generator", MessageBoxButtons.YesNo);
+
+			return act == DialogResult.Yes;
 		}
 
 		/// <summary>
@@ -55,15 +73,61 @@ namespace Sudoku.Interactive
 				}
 			}
 		}
+		
+		/// <summary>
+		/// Run generation with ability to cancel
+		/// </summary>
+		private async Task Generate()
+		{
+			using (var generationTokenSource = new CancellationTokenSource())
+			{
+				var generationSettings = new GenerationSettings
+				{
+					Difficulty = _model.SudokuDifficulty,
+					Symmetry = _model.SudokuSymmetry,
+					DifficultyPoints = _model.DifficultyPoints
+				};
+
+				var generationTask = Task.Run(() =>
+				{
+					_model.CurrentSudoku = SudokuGenerator.Generate(generationSettings, generationTokenSource.Token);
+				}, generationTokenSource.Token);
+
+				while (true)
+				{
+					using (var delayToken = CancellationTokenSource.CreateLinkedTokenSource(generationTokenSource.Token))
+					{
+						var delayTask = Task.Delay(5_000, delayToken.Token);
+						var finishedTask = await Task.WhenAny(generationTask, delayTask);
+
+						if (finishedTask != generationTask)
+						{
+							if (AskToWait()) continue;
+
+							generationTokenSource.Cancel();
+
+							await generationTask.ContinueWith(task => Console.WriteLine(@"Generation task cancelled"),
+								TaskContinuationOptions.OnlyOnCanceled);
+
+							break;
+						}
+
+						delayToken.Cancel();
+
+						await delayTask.ContinueWith(task => Console.WriteLine(@"Delay task cancelled"),
+							TaskContinuationOptions.OnlyOnCanceled);
+
+						break;
+					}
+				}
+			}
+		}
 
 		private async void GenerateButton_Click(object sender, EventArgs e)
 		{
 			_model.IsGenerateAvailable = false;
 
-			await Task.Run(() =>
-			{
-				_model.CurrentSudoku = SudokuGenerator.Generate(_model.SudokuDifficulty, _model.SudokuSymmetry, _model.DifficultyPoints);
-			});
+			await Generate();
 
 			UpdateLabelsUi();
 			_model.IsSolveAvailable = true;
@@ -147,7 +211,7 @@ namespace Sudoku.Interactive
 
 		private async void MainForm_FormClosing(object sender, FormClosingEventArgs e)
 		{
-			await SudokuAdapter.SaveSudoku(_model.CurrentSudoku);
+			await SudokuAdapter.SaveSudokuAsync(_model.CurrentSudoku);
 		}
 
 		private async void MainForm_Load(object sender, EventArgs e)
@@ -156,11 +220,10 @@ namespace Sudoku.Interactive
 			{
 				_model.CurrentSudoku = await SudokuAdapter.LoadSavedSudoku();
 
-				if (_model.CurrentSudoku != null)
-				{
-					UpdateLabelsUi();
-					_model.IsSolveAvailable = true;
-				}
+				if (_model.CurrentSudoku == null) return;
+
+				UpdateLabelsUi();
+				_model.IsSolveAvailable = true;
 			}
 			catch (Exception exception)
 			{

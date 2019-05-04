@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Sudoku.Domain
 {
@@ -87,14 +88,14 @@ namespace Sudoku.Domain
 		/// <returns></returns>
 		public override string ToString()
 		{
-			var result = "";
+			var result = new StringBuilder();
 			for (var i = 0; i < BigSide; i++)
 			{
 				for (var j = 0; j < BigSide; j++)
-					result += this[i, j];
-				result += '\n';
+					result.Append(this[i, j]);
+				result.Append(Environment.NewLine);
 			}
-			return result;
+			return result.ToString();
 		}
 
 		/// <summary>
